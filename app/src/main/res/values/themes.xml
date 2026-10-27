@@ -1,0 +1,9 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Base.Theme.AppFitness" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="fontFamily">@font/jockeyone_regular</item>>
+        <item name="android:fontFamily">@font/jockeyone_regular</item>
+    </style>
+
+    <style name="Theme.AppFitness" parent="Base.Theme.AppFitness" />
+</resources>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nav_home">
+
+    <fragment
+        android:id="@+id/nav_home"
+        android:name="com.example.appfitness.ui.FragmentoFeed"
+        android:label="Inicio" />
+
+    <fragment
+        android:id="@+id/nav_dumbell"
+        android:name="com.example.appfitness.ui.GuardarPublicacion"
+        android:label="Entreno" />
+
+    <fragment
+        android:id="@+id/nav_leaderb"
+        android:name="com.example.appfitness.ui.FragmentoFeed"
+        android:label="Leaderboard" />
+
+    <fragment
+        android:id="@+id/nav_profile"
+        android:name="com.example.appfitness.ui.FragmentoFeed"
+        android:label="Perfil" />
+
+</navigation>

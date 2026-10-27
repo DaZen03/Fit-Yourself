@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/fondogris"
+        tools:context=".ui.RegistroActivity">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="30dp"
+            app:cardCornerRadius="30dp"
+            app:cardElevation="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvTituloRegistro"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="20dp"
+                    android:fontFamily="@font/jockeyone_regular"
+                    android:text="Registro de Usuario"
+                    android:textAlignment="center"
+                    android:textColor="@color/black"
+                    android:textSize="36sp" />
+
+                <EditText
+                    android:id="@+id/ingresarNombre"
+                    android:layout_width="220dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="25dp"
+                    android:drawableLeft="@drawable/usuario"
+                    android:drawablePadding="8dp"
+                    android:fontFamily="@font/textonormal"
+                    android:hint="Nombre de Usuario"
+                    android:inputType="textPersonName"
+                    android:textAlignment="center"
+                    android:textColor="@color/white" />
+
+                <EditText
+                    android:id="@+id/ingresarCorreo"
+                    android:layout_width="220dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="20dp"
+                    android:drawableLeft="@drawable/mail"
+                    android:drawablePadding="8dp"
+                    android:fontFamily="@font/textonormal"
+                    android:hint="Email"
+                    android:inputType="textEmailAddress"
+                    android:textAlignment="center"
+                    android:textColor="@color/white" />
+
+                <EditText
+                    android:id="@+id/ingresarContrasena"
+                    android:layout_width="220dp"
+                    android:layout_height="50dp"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="20dp"
+                    android:drawableLeft="@drawable/icon_lock"
+                    android:drawablePadding="8dp"
+                    android:fontFamily="@font/textonormal"
+                    android:hint="Contraseña"
+                    android:inputType="textPassword"
+                    android:textAlignment="center"
+                    android:textColor="@color/white" />
+
+                <Button
+                    android:id="@+id/btnRegistrar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="25dp"
+                    android:backgroundTint="#08DB56"
+                    android:fontFamily="@font/jockeyone_regular"
+                    android:text="Registrarse"
+                    android:textColor="@color/black"
+                    app:cornerRadius="20dp" />
+
+                <TextView
+                    android:id="@+id/tvVolverLogin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="15dp"
+                    android:fontFamily="@font/textonormal"
+                    android:text="¿Ya tienes cuenta? Inicia Sesión"
+                    android:textColor="@color/black"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

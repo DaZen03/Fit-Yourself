@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Fit-Yourself</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_dumbell">Entreno</string>
+    <string name="nav_leaderb">Leaderboard</string>
+    <string name="nav_profile">Perfil</string>
+
+
+
+</resources>
