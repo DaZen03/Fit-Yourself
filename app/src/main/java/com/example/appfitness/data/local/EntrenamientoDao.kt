@@ -18,7 +18,7 @@ interface EntrenamientoDao {
     suspend fun insertarEntrenamiento(entrenamiento: EntrenamientoEntity): Long
 
     @Query("select * from entrenamientos where fotoRuta is not null and fotoTiempo is not null")
-    suspend fun obtenerFotoConEntreno(ahora: Long = System.currentTimeMillis()): List<EntrenamientoEntity>
+    suspend fun obtenerFotoConEntreno(): List<EntrenamientoEntity>
 
     @Query("Update entrenamientos set fotoRuta = null, fotoTiempo = null " )
     suspend fun resetearTiempo(): Int

@@ -99,11 +99,32 @@
                 android:textColor="@color/black" />
 
             <Button
+                android:id="@+id/btnTomarfoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fontFamily="@font/jockeyone_regular"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                app:cornerRadius="16dp"
+                android:backgroundTint="@color/verde_alien"/>
+
+            <ImageView
+                android:id="@+id/fotoPrev"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="center_horizontal"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                tools:visibility="visible"
+                />
+
+
+            <Button
                 android:id="@+id/btnGuardar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:backgroundTint="#08DB56"
+                android:backgroundTint="@color/verde_alien"
                 android:fontFamily="@font/jockeyone_regular"
                 android:text="Guardar Entrenamiento"
                 android:textColor="@color/black"

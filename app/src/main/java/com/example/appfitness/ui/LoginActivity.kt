@@ -55,6 +55,8 @@ class LoginActivity: AppCompatActivity() {
                         } else {
                             Toast.makeText(this@LoginActivity, "Contraseña incorrecta", Toast.LENGTH_LONG).show()
                         }
+                    } else {
+                        Toast.makeText(this@LoginActivity, "El correo no está registrado", Toast.LENGTH_SHORT).show()
                     }
                 }
             }

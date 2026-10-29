@@ -31,7 +31,7 @@ abstract class AppDatabase : RoomDatabase(){
                 val instancia = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "App fitness"
+                    "App_fitness"
                 )
                     .fallbackToDestructiveMigration()
                     .build()

@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class SerieEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-    val entrenamientoId: Int,
+    val entrenamientoId: Long,
     val nombreEjercicio: String,
     val numeroSerie: Int,
     val pesoKg: Double,
