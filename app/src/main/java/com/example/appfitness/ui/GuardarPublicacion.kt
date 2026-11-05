@@ -1,7 +1,9 @@
 package com.example.appfitness.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -44,6 +46,10 @@ class GuardarPublicacion : Fragment() {
         }
     }
 
+    private val solicitarPermisosUbicacion = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { _ -> }
+
     private val tomarFotoLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { exito ->
@@ -67,6 +73,8 @@ class GuardarPublicacion : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        verificarPermisosUbicacion()
+
         val db = AppDatabase.obtenerBaseDatos(requireContext())
         val entrenamientoDao = db.entrenamientoDao()
         val serieDao = db.serieDao()
@@ -81,29 +89,34 @@ class GuardarPublicacion : Fragment() {
             val pesoTexto = binding.ePesoKg.text.toString().trim()
             val repsTexto = binding.eRepeticiones.text.toString().trim()
             val duracionTexto = binding.eDuracion.text.toString().trim()
+            val ubicacionInput = binding.eUbicacion.text.toString().trim()
 
             if (rutina.isEmpty() || ejercicio.isEmpty() || pesoTexto.isEmpty() || repsTexto.isEmpty() || duracionTexto.isEmpty()) {
                 Toast.makeText(requireContext(), "Por favor completa todos los campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val peso = pesoTexto.toDoubleOrNull() ?: 0.0
-            val repeticiones = repsTexto.toIntOrNull() ?: 0
-            val duracion = duracionTexto.toIntOrNull() ?: 0
+            val peso = pesoTexto.toDouble()
+            val repeticiones = repsTexto.toInt()
+            val duracion = duracionTexto.toInt()
             val fechaActual = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
 
-            lifecycleScope.launch(Dispatchers.IO) {
+            val (latitud, longitud) = obtenerUbicacionActual()
+            val nombreUbicacionFinal = if (ubicacionInput.isNotEmpty()) ubicacionInput else null
 
+            lifecycleScope.launch(Dispatchers.IO) {
                 val nuevoEntrenamiento = EntrenamientoEntity(
                     usuarioId = 1,
                     nombreRutina = rutina,
                     fecha = fechaActual,
                     duracionMinutos = duracion,
+                    latitud = latitud,
+                    longitud = longitud,
+                    ubicacionNombre = nombreUbicacionFinal,
                     fotoRuta = fotoRuta,
                     fotoTiempo = fotoTiempo
                 )
                 val entrenamientoId = entrenamientoDao.insertarEntrenamiento(nuevoEntrenamiento)
-
 
                 val nuevaSerie = SerieEntity(
                     entrenamientoId = entrenamientoId,
@@ -122,24 +135,33 @@ class GuardarPublicacion : Fragment() {
         }
     }
 
+    private fun verificarPermisosUbicacion() {
+        val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (!fine && !coarse) {
+            solicitarPermisosUbicacion.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
+    }
+
+    private fun obtenerUbicacionActual(): Pair<Double?, Double?> {
+        val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if (!fine && !coarse) return Pair(null, null)
+
+        val locGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+        val locNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+        val loc = locGps ?: locNet
+
+        return Pair(loc?.latitude, loc?.longitude)
+    }
+
     private fun verificarPermisoYCapturar() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             dispararCapturaCamera()
         } else {
             solicitarPermisoCamera.launch(Manifest.permission.CAMERA)
-        }
-
-        private fun verificarPermisoYCapturar() {
-        when {
-            ContextCompat.checkSelfPermission(
-                requireContext(),
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                dispararCapturaCamera()
-            }
-            else -> {
-                solicitarPermisoCamera.launch(Manifest.permission.CAMERA)
-            }
         }
     }
 
@@ -159,6 +181,7 @@ class GuardarPublicacion : Fragment() {
         binding.ePesoKg.text?.clear()
         binding.eRepeticiones.text?.clear()
         binding.eDuracion.text?.clear()
+        binding.eUbicacion.text?.clear()
         binding.fotoPrev.visibility = View.GONE
         fotoRuta = null
         fotoTiempo = null

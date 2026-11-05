@@ -23,7 +23,8 @@ interface EntrenamientoDao {
     @Query("Update entrenamientos set fotoRuta = null, fotoTiempo = null " )
     suspend fun resetearTiempo(): Int
 
-
+    @Query("delete from entrenamientos where fecha < :fechaLimite")
+    suspend fun eliminarEntrenamientosAntiguos(fechaLimite: String)
 }
 
 

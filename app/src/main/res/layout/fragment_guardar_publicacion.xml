@@ -98,6 +98,17 @@
                 android:paddingStart="12dp"
                 android:textColor="@color/black" />
 
+            <EditText
+                android:id="@+id/eUbicacion"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="12dp"
+                android:fontFamily="@font/textonormal"
+                android:hint="Ubicación (ej. Gimnasio Central)"
+                android:inputType="textPersonName"
+                android:paddingStart="12dp"
+                android:textColor="@color/black" />
+
             <Button
                 android:id="@+id/btnTomarfoto"
                 android:layout_width="match_parent"

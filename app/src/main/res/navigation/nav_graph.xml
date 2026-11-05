@@ -16,12 +16,12 @@
 
     <fragment
         android:id="@+id/nav_leaderb"
-        android:name="com.example.appfitness.ui.FragmentoFeed"
+        android:name="com.example.appfitness.ui.LeaderboardFragment"
         android:label="Leaderboard" />
 
     <fragment
         android:id="@+id/nav_profile"
-        android:name="com.example.appfitness.ui.FragmentoFeed"
+        android:name="com.example.appfitness.ui.ProfileFragment"
         android:label="Perfil" />
 
 </navigation>
