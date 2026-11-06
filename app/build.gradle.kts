@@ -38,6 +38,7 @@ android {
 
 
 dependencies {
+    implementation(libs.play.services.location)
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("androidx.fragment:fragment-ktx:1.9.1")
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
