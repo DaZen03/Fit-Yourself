@@ -1,4 +1,4 @@
-package com.example.appfitness.ui
+package com.example.appfitness.ui.adapter
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
@@ -55,13 +55,11 @@ class LeaderboardFragment : Fragment() {
 
             for (usuario in usuarios) {
                 val entrenamientos = entrenamientoDao.obtenerEntrenamientosPorUsuario(usuario.id)
-
                 val diasUnicos = entrenamientos.map { it.fecha }.distinct().size
-
                 ranking.add(LeaderboardUser(usuario.usuario, diasUnicos))
             }
 
-            val rankingOrdenado = ranking.sortedByDescending { it.diasEntrenados }
+            val rankingOrdenado = ranking.sortedByDescending { it.rachaDias }
 
             withContext(Dispatchers.Main) {
                 adapter.actualizarLista(rankingOrdenado)
