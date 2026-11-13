@@ -3,6 +3,7 @@ package com.example.appfitness.ui
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Bundle
@@ -11,30 +12,45 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.currentCompositionErrors
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.example.appfitness.R
 import com.example.appfitness.data.local.AppDatabase
 import com.example.appfitness.data.local.EntrenamientoEntity
 import com.example.appfitness.data.local.SerieEntity
 import com.example.appfitness.databinding.FragmentGuardarPublicacionBinding
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.maplibre.android.MapLibre
+import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.OnMapReadyCallback
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class GuardarPublicacion : Fragment() {
+class GuardarPublicacion : Fragment(), OnMapReadyCallback {
 
     private var _binding: FragmentGuardarPublicacionBinding? = null
     private val binding get() = _binding!!
 
+    private var currentMarker: org.maplibre.android.annotations.Marker? = null
+    private lateinit var mapView: MapView
+    private var mapLibreMap: MapLibreMap? = null
+
     private var fotoRuta: String? = null
     private var fotoTiempo: Long? = null
-    private lateinit var fotoUri: Uri
+    private lateinit var fotoUbicacion: Uri
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
 
     private val solicitarPermisoCamera = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -46,19 +62,43 @@ class GuardarPublicacion : Fragment() {
         }
     }
 
-    private val solicitarPermisosUbicacion = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { _ -> }
-
     private val tomarFotoLauncher = registerForActivityResult(
         ActivityResultContracts.TakePicture()
     ) { exito ->
         if (exito) {
-            binding.fotoPrev.visibility = View.VISIBLE
-            binding.fotoPrev.setImageURI(fotoUri)
-            fotoRuta = fotoUri.toString()
+            try {
+                val context = requireContext()
+                val inputStream = context.contentResolver.openInputStream(fotoUbicacion)
+                val opciones = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                android.graphics.BitmapFactory.decodeStream(inputStream, null, opciones)
+                inputStream?.close()
+
+                val maximo = 600
+                var escala = 1
+                while (opciones.outWidth / escala / 2 >= maximo && opciones.outHeight / escala / 2 >= maximo) {
+                    escala *= 2
+                }
+
+                val inputStream2 = context.contentResolver.openInputStream(fotoUbicacion)
+                val decodeOptions = android.graphics.BitmapFactory.Options().apply { inSampleSize = escala }
+                val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream2, null, decodeOptions)
+                inputStream2?.close()
+
+                if (bitmap != null) {
+                    val archivoOriginal = File(context.filesDir, fotoUbicacion.lastPathSegment ?: "foto.jpg")
+                    val outputStream = java.io.FileOutputStream(archivoOriginal)
+                    bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 80, outputStream)
+                    outputStream.flush()
+                    outputStream.close()
+                }
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+
+
+            fotoRuta = fotoUbicacion.toString()
             fotoTiempo = System.currentTimeMillis()
-            Toast.makeText(requireContext(), "Foto tomada con éxito", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Foto tomada", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -66,6 +106,7 @@ class GuardarPublicacion : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        MapLibre.getInstance(requireContext())
         _binding = FragmentGuardarPublicacionBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -73,7 +114,12 @@ class GuardarPublicacion : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        verificarPermisosUbicacion()
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(requireContext())
+
+
+        mapView = binding.mapView
+        mapView.onCreate(savedInstanceState)
+        mapView.getMapAsync(this)
 
         val db = AppDatabase.obtenerBaseDatos(requireContext())
         val entrenamientoDao = db.entrenamientoDao()
@@ -81,6 +127,10 @@ class GuardarPublicacion : Fragment() {
 
         binding.btnTomarfoto.setOnClickListener {
             verificarPermisoYCapturar()
+        }
+
+        binding.btnGuardarUbicacion.setOnClickListener {
+            obtenerUbicacionGps()
         }
 
         binding.btnGuardar.setOnClickListener {
@@ -100,8 +150,6 @@ class GuardarPublicacion : Fragment() {
             val repeticiones = repsTexto.toInt()
             val duracion = duracionTexto.toInt()
             val fechaActual = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-
-            val (latitud, longitud) = obtenerUbicacionActual()
             val nombreUbicacionFinal = if (ubicacionInput.isNotEmpty()) ubicacionInput else null
 
             lifecycleScope.launch(Dispatchers.IO) {
@@ -110,8 +158,6 @@ class GuardarPublicacion : Fragment() {
                     nombreRutina = rutina,
                     fecha = fechaActual,
                     duracionMinutos = duracion,
-                    latitud = latitud,
-                    longitud = longitud,
                     ubicacionNombre = nombreUbicacionFinal,
                     fotoRuta = fotoRuta,
                     fotoTiempo = fotoTiempo
@@ -128,35 +174,89 @@ class GuardarPublicacion : Fragment() {
                 serieDao.insertarSerie(nuevaSerie)
 
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Entrenamiento guardado con éxito!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "Entrenamiento guardado", Toast.LENGTH_SHORT).show()
                     limpiarFormulario()
                 }
             }
         }
     }
 
-    private fun verificarPermisosUbicacion() {
-        val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        if (!fine && !coarse) {
-            solicitarPermisosUbicacion.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+    override fun onMapReady(map: MapLibreMap) {
+        mapLibreMap = map
+
+        map.setStyle("https://tiles.openfreemap.org/styles/liberty") { style ->
+            Toast.makeText(requireContext(), "Mapa Listo", Toast.LENGTH_SHORT).show()
+        }
+
+        mapLibreMap?.addOnMapClickListener { punto ->
+            val latitud = punto.latitude
+            val longitud = punto.longitude
+
+            currentMarker?.let { mapLibreMap?.removeMarker(it) }
+
+            val markerOptions = org.maplibre.android.annotations.MarkerOptions().apply {
+                position = org.maplibre.android.geometry.LatLng(latitud, longitud)
+                title = "Ubicación de entreno"
+            }
+            currentMarker = mapLibreMap?.addMarker(markerOptions)
+
+            binding.eUbicacion.setText(String.format(Locale.getDefault(), "Lat: %.4f, Lon: %.4f", latitud, longitud))
+            Toast.makeText(requireContext(), "Ubicación seleccionada", Toast.LENGTH_SHORT).show()
+            true
         }
     }
 
-    private fun obtenerUbicacionActual(): Pair<Double?, Double?> {
-        val locationManager = requireContext().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val fine = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val coarse = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-
-        if (!fine && !coarse) return Pair(null, null)
-
-        val locGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-        val locNet = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-        val loc = locGps ?: locNet
-
-        return Pair(loc?.latitude, loc?.longitude)
+    private val solicitarPermisosUbicacion = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permisos ->
+        val concedido = permisos[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permisos[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (concedido) {
+            obtenerUbicacionGps()
+        } else {
+            Toast.makeText(requireContext(), "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
+        }
     }
 
+    private fun obtenerUbicacionGps() {
+        val fineGranted = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val coarseGranted = ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if (fineGranted || coarseGranted) {
+            fusedLocationProviderClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    val lat = location.latitude
+                    val lon = location.longitude
+                    val marcador = org.maplibre.android.geometry.LatLng(lat, lon)
+
+                    currentMarker?.let { mapLibreMap?.removeMarker(it) }
+                    currentMarker = mapLibreMap?.addMarker(
+                        org.maplibre.android.annotations.MarkerOptions()
+                            .position(marcador)
+                            .title("Ubicacion GPS")
+                    )
+
+                    mapLibreMap?.cameraPosition = org.maplibre.android.camera.CameraPosition.Builder()
+                        .target(marcador)
+                        .zoom(15.0)
+                        .build()
+
+                    binding.eUbicacion.setText(String.format(Locale.getDefault(), "Lat: %.4f, Lon: %.4f", lat, lon))
+                    Toast.makeText(requireContext(), "Ubicación GPS obtenida", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(requireContext(), "GPS sin señal reciente.", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+
+            solicitarPermisosUbicacion.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
     private fun verificarPermisoYCapturar() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
             dispararCapturaCamera()
@@ -167,12 +267,12 @@ class GuardarPublicacion : Fragment() {
 
     private fun dispararCapturaCamera() {
         val archivoFoto = File(requireContext().filesDir, "foto_${System.currentTimeMillis()}.jpg")
-        fotoUri = FileProvider.getUriForFile(
+        fotoUbicacion = FileProvider.getUriForFile(
             requireContext(),
             "${requireContext().packageName}.fileprovider",
             archivoFoto
         )
-        tomarFotoLauncher.launch(fotoUri)
+        tomarFotoLauncher.launch(fotoUbicacion)
     }
 
     private fun limpiarFormulario() {
@@ -182,13 +282,20 @@ class GuardarPublicacion : Fragment() {
         binding.eRepeticiones.text?.clear()
         binding.eDuracion.text?.clear()
         binding.eUbicacion.text?.clear()
-        binding.fotoPrev.visibility = View.GONE
         fotoRuta = null
         fotoTiempo = null
     }
 
+    override fun onStart() { super.onStart(); mapView.onStart() }
+    override fun onResume() { super.onResume(); mapView.onResume() }
+    override fun onPause() { super.onPause(); mapView.onPause() }
+    override fun onStop() { super.onStop(); mapView.onStop() }
+    override fun onSaveInstanceState(outState: Bundle) { super.onSaveInstanceState(outState); mapView.onSaveInstanceState(outState) }
+    override fun onLowMemory() { super.onLowMemory(); mapView.onLowMemory() }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        mapView.onDestroy()
         _binding = null
     }
 }

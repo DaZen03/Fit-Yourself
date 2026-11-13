@@ -28,9 +28,24 @@ class EntrenamientoAdapter(
         holder.binding.tvTitulo.text = entreno.nombreRutina
         holder.binding.tvDescripcion.text = "Fecha: ${entreno.fecha} | Duración: ${entreno.duracionMinutos} min"
 
+
+        if (!entreno.ubicacionNombre.isNullOrEmpty()) {
+            holder.binding.tubicacion.visibility = View.VISIBLE
+            holder.binding.tubicacion.text = "${entreno.ubicacionNombre}"
+        } else if (entreno.latitud != null && entreno.longitud != null) {
+            holder.binding.tubicacion.visibility = View.VISIBLE
+            holder.binding.tubicacion.text = "Lat: ${entreno.latitud}, Lon: ${entreno.longitud}"
+        } else {
+            holder.binding.tubicacion.visibility = View.GONE
+        }
+
         if (!entreno.fotoRuta.isNullOrEmpty()) {
             holder.binding.miFoto.visibility = View.VISIBLE
-            holder.binding.miFoto.setImageURI(Uri.parse(entreno.fotoRuta))
+            try {
+                holder.binding.miFoto.setImageURI(Uri.parse(entreno.fotoRuta))
+            } catch (e: Exception){
+                holder.binding.miFoto.visibility = View.GONE
+            }
         } else {
             holder.binding.miFoto.visibility = View.GONE
         }

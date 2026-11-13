@@ -1,5 +1,4 @@
-package com.example.appfitness.ui.adapter
-
+package com.example.appfitness.ui
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -45,7 +44,8 @@ class LeaderboardFragment : Fragment() {
     }
 
     private fun cargarLeaderboard() {
-        val db = AppDatabase.obtenerBaseDatos(requireContext())
+        val ctx = context ?: return
+        val db = AppDatabase.obtenerBaseDatos(ctx)
         val usuarioDao = db.usuarioDao()
         val entrenamientoDao = db.entrenamientoDao()
 
@@ -62,7 +62,9 @@ class LeaderboardFragment : Fragment() {
             val rankingOrdenado = ranking.sortedByDescending { it.rachaDias }
 
             withContext(Dispatchers.Main) {
-                adapter.actualizarLista(rankingOrdenado)
+                _binding?.let {
+                    adapter.actualizarLista(rankingOrdenado)
+                }
             }
         }
     }

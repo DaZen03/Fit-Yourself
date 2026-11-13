@@ -25,6 +25,13 @@ interface EntrenamientoDao {
 
     @Query("delete from entrenamientos where fecha < :fechaLimite")
     suspend fun eliminarEntrenamientosAntiguos(fechaLimite: String)
+
+
+    @Query("select * from entrenamientos where timestamp < :tiempoExpiracion")
+    suspend fun obtenerRegistroViejo(tiempoExpiracion: Long): List<EntrenamientoEntity>
+
+    @Query("delete from entrenamientos where timestamp < :tiempoExpiracion")
+    suspend fun eliminarEntreno(tiempoExpiracion: Long): Int
 }
 
 

@@ -36,25 +36,28 @@ class ProfileFragment : Fragment() {
     }
 
     private fun cargarDatosUsuario() {
-        val db = AppDatabase.obtenerBaseDatos(requireContext())
+        val contexto = context ?: return
+        val db = AppDatabase.obtenerBaseDatos(contexto)
         val usuarioDao = db.usuarioDao()
         val entrenamientoDao = db.entrenamientoDao()
 
         lifecycleScope.launch(Dispatchers.IO) {
             val usuario = usuarioDao.obtenerUsuarioActual()
-            val entrenamientos = usuario?.let { 
-                entrenamientoDao.obtenerEntrenamientosPorUsuario(it.id) 
+            val entrenamientos = usuario?.let {
+                entrenamientoDao.obtenerEntrenamientosPorUsuario(it.id)
             } ?: entrenamientoDao.obtenerTodosEntrenamientos()
 
             withContext(Dispatchers.Main) {
-                if (usuario != null) {
-                    binding.tvNombreUsuario.text = usuario.usuario
-                    binding.tvEmailUsuario.text = usuario.email
-                } else {
-                    binding.tvNombreUsuario.text = "Usuario"
-                    binding.tvEmailUsuario.text = "Sin correo registrado"
+                _binding?.let { bindingg ->
+                    if (usuario != null) {
+                        bindingg.tvNombreUsuario.text = usuario.usuario
+                        bindingg.tvEmailUsuario.text = usuario.email
+                    } else {
+                        bindingg.tvNombreUsuario.text = "Usuario"
+                        bindingg.tvEmailUsuario.text = "Sin correo registrado"
+                    }
+                    bindingg.tvTotalEntrenamientos.text = "Total de entrenamientos: ${entrenamientos.size}"
                 }
-                binding.tvTotalEntrenamientos.text = "Total de entrenamientos: ${entrenamientos.size}"
             }
         }
     }

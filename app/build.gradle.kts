@@ -38,7 +38,9 @@ android {
 
 
 dependencies {
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation(libs.play.services.location)
+    implementation("org.maplibre.gl:android-sdk:13.7.1")
     implementation("org.mindrot:jbcrypt:0.4")
     implementation("androidx.fragment:fragment-ktx:1.9.1")
     implementation(libs.androidx.lifecycle.viewmodel.ktx)

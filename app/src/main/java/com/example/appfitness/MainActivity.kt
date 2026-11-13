@@ -9,6 +9,7 @@ import com.example.appfitness.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
+
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -22,7 +23,12 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.contenedor1) as? NavHostFragment
 
         navHostFragment?.let{val navController = navHostFragment.navController
-            binding.bottomNavigationMenu.setupWithNavController(navController)}
+            binding.bottomNavigationMenu.setupWithNavController(navController)
+
+        binding.fabAgregar.setOnClickListener {
+            navController.navigate(R.id.nav_dumbell)
+        }
+        }
 
     }
 }

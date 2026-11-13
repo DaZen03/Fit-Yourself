@@ -43,6 +43,16 @@
             android:textSize="13sp"
             tools:text="Descripción" />
 
+        <TextView
+            android:id="@+id/tubicacion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:fontFamily="@font/textonormal"
+            android:textColor="@color/black"
+            android:textSize="13sp"
+            tools:text="Ubicación:" />
+
     </LinearLayout>
 
 </com.google.android.material.card.MaterialCardView>

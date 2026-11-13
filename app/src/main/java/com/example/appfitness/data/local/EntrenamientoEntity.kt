@@ -16,5 +16,6 @@ data class EntrenamientoEntity(
     val longitud: Double? = null,
     val ubicacionNombre: String? = null,
     val fotoRuta: String? = null,
-    val fotoTiempo: Long? = null
+    val fotoTiempo: Long? = null,
+    val timestamp: Long = System.currentTimeMillis()
 )

@@ -44,11 +44,36 @@ class FragmentoFeed : Fragment() {
     }
 
     private fun cargarEntrenamientos() {
-        val dao = AppDatabase.obtenerBaseDatos(requireContext()).entrenamientoDao()
+        val contexto = context ?: return
+        val dao = AppDatabase.obtenerBaseDatos(contexto).entrenamientoDao()
+
         lifecycleScope.launch(Dispatchers.IO) {
+            val horasLimite = 24L
+            val tiempoLimite = System.currentTimeMillis() - (horasLimite * 60 * 60 * 1000L)
+
+            val antiguos = dao.obtenerRegistroViejo(tiempoLimite)
+            for (entreno in antiguos) {
+                if (!entreno.fotoRuta.isNullOrEmpty()) {
+                    try {
+                        val uri = android.net.Uri.parse(entreno.fotoRuta)
+                        val path = uri.path
+                        if (path != null) {
+                            val file = java.io.File(path)
+                            if (file.exists()) file.delete()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+
+            dao.eliminarEntreno(tiempoLimite)
+
             val lista = dao.obtenerTodosEntrenamientos()
             withContext(Dispatchers.Main) {
-                adapter.actualizarLista(lista)
+                _binding?.let {
+                    adapter.actualizarLista(lista)
+                }
             }
         }
     }
